@@ -7,6 +7,7 @@ from django.contrib.auth.models import Permission, Group
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
 from .models import HoatDong, Tag, Lop, Khoa, User, UserSV, QuyChe, ThanhTichNgoaiKhoa, Comment, Like, SinhVienMinhChungHoatDong, HocKi
+from .dao import order_drl_by_khoa
 
 
 # Register your models here.
@@ -14,6 +15,18 @@ from .models import HoatDong, Tag, Lop, Khoa, User, UserSV, QuyChe, ThanhTichNgo
 
 class DRLAppAdminSite(admin.AdminSite):
     site_header = "TRANG QUẢN TRỊ HỆ THỐNG ĐÁNG GIÁ ĐIỂM RÈN LUYỆN"
+
+    def get_urls(self):
+        return [
+                   path('drl-stats/', self.stats_view)
+               ] + super().get_urls()
+
+    def stats_view(self, request):
+        stats = order_drl_by_khoa(request.GET.get('name'))
+        return TemplateResponse(request, 'admin/stats_view.html',{
+            'stats': stats,
+            'site_header': DRLAppAdminSite.site_header
+        })
 
 
 class HoatDongTagInlineAdmin(admin.TabularInline):

@@ -1,8 +1,11 @@
+import csv
 import json
+from time import strftime
 
 from django.contrib.auth.models import Group
 from django.core.serializers import serialize
 from django.core.serializers.json import DjangoJSONEncoder
+from django.http import HttpResponse
 from django.shortcuts import render
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import action
@@ -12,6 +15,8 @@ from .models import HoatDong, Tag, Lop, Khoa, User, UserSV, QuyChe, ThanhTichNgo
 from .serializer import HoatDongSerializerDetail, HocKiSerializer, KhoaSerializer, CommentSerializer, UserSVSerializer, HoatDongSerializer, LikeSerializer, LopSerializer, QuyCheSerializer, TagSerializer, ThanhTichNgoaiKhoaSerializer, UserSerializer, MinhChungSerializer
 from .paginator import DRLPaginator
 from .perms import HasGroupTLSVPermission
+from django.templatetags.static import static
+from django.conf import settings
 
 # Create your views here.
 
@@ -88,7 +93,6 @@ class MinhChungViewSet(viewsets.ViewSet, generics.ListAPIView):
         return queries
 
 
-
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -137,7 +141,7 @@ class HocKiViewSet(viewsets.ViewSet, generics.ListAPIView):
         return queries
 
 
-class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView):
+class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.RetrieveAPIView):
     queryset = HoatDong.objects.all()
     serializer_class = HoatDongSerializerDetail
     pagination_class = DRLPaginator
@@ -149,6 +153,43 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
         if q:
             queries = queries.filter(name__icontains=q)
         return queries
+
+    @action(methods=['POST'], url_path="diemdanh", detail=True)
+    def diem_danh(self, request, pk):
+        # headers = ['MSSV', 'First Name', 'Last Name', 'Email']
+        file_name = f"{self.get_object().id}_{strftime('%Y-%m-%d-%H-%M')}"
+        s = f"{settings.MEDIA_ROOT}/diem_danh/{file_name}.csv"
+
+        with open(s, 'a+', newline='') as csv_file:
+            write = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
+            line = [request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'),
+                    request.data.get('email')]
+            # write.writerow(headers)
+            write.writerow(line)
+
+        # writer = csv.writer(response)
+        # writer.writerow(headers)
+
+        # users = UserSV.objects.values(request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'), request.data.get('email'))
+
+        return HttpResponse(status=200)
+
+    # @action(methods=['POST'], url_path="diemdanh", detail=True)
+    # def diem_danh(self, request, pk):
+    #     headers = ['MSSV', 'First Name', 'Last Name', 'Email']
+    #     file_name = f"{self.get_object().id}_{strftime('%Y-%m-%d-%H-%M')}"
+    #
+    #     response = HttpResponse(content_type='text/csv')
+    #     response['Content-Disposition'] = f'attachment; filename="{file_name}.csv"'
+    #
+    #     writer = csv.writer(response)
+    #     writer.writerow(headers)
+    #
+    #     # users = UserSV.objects.values(request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'), request.data.get('email'))
+    #
+    #     line = [request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'), request.data.get('email')]
+    #     writer.writerow(line)
+    #     return response
 
 
 class QuyCheViewSet(viewsets.ViewSet, generics.ListAPIView):

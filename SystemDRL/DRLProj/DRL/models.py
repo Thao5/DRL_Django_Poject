@@ -15,7 +15,7 @@ class UserSV(User):
     mssv = models.CharField(max_length=10, unique=True, default='0000000000')
     khoa = models.ForeignKey('Khoa', on_delete=models.SET_NULL, null=True)
     lop = models.ForeignKey('Lop', on_delete=models.SET_NULL, null=True)
-    thanh_tich_ngoai_khoa = models.OneToOneField('ThanhTichNgoaiKhoa', on_delete=models.SET_NULL, null=True)
+    # thanh_tich_ngoai_khoa = models.OneToOneField('ThanhTichNgoaiKhoa', on_delete=models.SET_NULL, null=True)
     # hoat_dongs = models.ManyToManyField('HoatDong', blank=True)
 
 
@@ -93,6 +93,7 @@ class ThanhTichNgoaiKhoa(BaseModel):
     diem = models.FloatField(default=0)
     thanh_tich = models.CharField(max_length=15)
     quy_ches = models.ManyToManyField('QuyChe')
+    sinh_vien = models.OneToOneField(UserSV, on_delete=models.SET_NULL, null=True)
 
 
 class Interaction(BaseModel):

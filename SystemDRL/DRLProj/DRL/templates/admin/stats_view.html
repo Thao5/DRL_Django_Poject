@@ -1,6 +1,6 @@
 {%extends 'admin/base_site.html'%}
 {% block content %}
-<h1>THỐNG KÊ KHÓA HỌC</h1>
+<h1>THỐNG KÊ ĐIỂM RÈN LUYỆN</h1>
 
 <ul>
     {%for item in stats%}
@@ -17,8 +17,8 @@
     let values = [];
     let labels = [];
     {%for item in stats%}
-        values.push({{item.count}})
-        labels.push('{{item.name}}')
+        values.push({{item.diem}})
+        labels.push('{{item.mssv}}')
     {%endfor%}
     const ctx = document.getElementById('myChart');
       new Chart(ctx, {

@@ -1,15 +1,22 @@
-from django.db.models import Count
-from .models import Category, Course
+from django.db.models import Count, F
+from .models import Khoa, UserSV
 
 
-def load_course(params = {}):
-    q = Course.objects.all()
-    kw = params.get('kw')
-    if kw:
-        q = q.objects.filter(name__icontains=kw)
-    cate = params.get('cate')
-    if cate:
-        q = q.objects.filter(category_id=cate)
+# def load_thanh_tich(params = {}):
+#     q = ThanhTichNgoaiKhoa.objects.all()
+#     kw = params.get('kw')
+#     if kw:
+#         q = q.objects.filter(name__icontains=kw)
+#     cate = params.get('cate')
+#     if cate:
+#         q = q.objects.filter(category_id=cate)
 
-def count_course_by_cate():
-    return Category.objects.annotate(count = Count('course__id')).values('id', 'name', 'count').order_by('-id')
+def order_drl_by_khoa(name):
+    if name is not None and name.strip() != '':
+        return UserSV.objects.filter(khoa__name__icontains=name).annotate(diem=F('thanhtichngoaikhoa__diem'))\
+            .values('mssv', 'first_name', 'last_name', 'diem').order_by('-diem')
+
+    else:
+        return UserSV.objects.annotate(diem=F('thanhtichngoaikhoa__diem')) \
+            .values('mssv', 'first_name', 'last_name', 'diem').order_by(
+            '-diem')
