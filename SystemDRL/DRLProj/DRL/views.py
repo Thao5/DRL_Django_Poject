@@ -8,6 +8,13 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
 from django.shortcuts import render
 from drf_yasg.utils import swagger_auto_schema
+from pytz import unicode
+from reportlab.lib import colors
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.pdfmetrics import stringWidth
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import Table, TableStyle
+from reportlab.rl_settings import defaultPageSize
 from rest_framework.decorators import action
 from rest_framework import viewsets, permissions, generics, status, parsers, serializers
 from rest_framework.response import Response
@@ -22,6 +29,7 @@ import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
+from .dao import order_drl_by_khoa
 
 
 # Create your views here.
@@ -250,24 +258,70 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView):
 
     @action(methods=['GET'], url_path="statspdf", detail=False)
     def StatsPDF(self, request):
+        pdfmetrics.registerFont(TTFont("Vera", "Vera.ttf"))  # <- Important
+        pdfmetrics.registerFont(TTFont('Verdana', 'Verdana.ttf'))
+        # name = self.request.query_params.get('name')
+        drls = order_drl_by_khoa(self.request.query_params)
+        print(drls)
         buf = io.BytesIO()
         c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
+        c.setFont("Verdana", 14)
+        # PAGE_WIDTH = defaultPageSize[0]
+        # PAGE_HEIGHT = defaultPageSize[1]
+        text = u"THỐNG KÊ ĐIỂM RÈN LUYỆN THEO KHOA"
+        text_width = stringWidth(text, fontName="Vera", fontSize=14)
+        # y = 0 # wherever you want your text to appear
+        print((c._pagesize[0] - text_width) / float(2.0))
         textob = c.beginText()
+        # textob.textOut(text)
         textob.setTextOrigin(inch, inch)
-        textob.setFont("Helvetica", 14)
+        # textob.setFont("Helvetica", 14)
+        # textob = c.beginText()
+        # textob.setTextOrigin(inch, inch)
+        textob.setFont("Vera", 14)
 
-        lines = [
-            "this is line 1",
-            "this is line 2",
-            "this is line 3",
-            "this is line 4",
-            "this is line 5",
-        ]
+        t = [[], []]
 
-        for l in lines:
-            textob.textLine(l)
+        i = 0
+        for d in drls:
+            # textob.textLine(d.get('mssv'))
+            # textob.textLine(d.get('first_name'))
+            # textob.textLine(d.get('last_name'))
+            # textob.textLine(str(d.get('diem')))
+            t[i].append(d.get('mssv'))
+            t[i].append(d.get('last_name'))
+            t[i].append(d.get('first_name'))
+            t[i].append(str(d.get('diem')))
+            i = i + 1
 
+        t[i].append('MSSV')
+        t[i].append('Họ')
+        t[i].append('Tên')
+        t[i].append('Điểm')
+
+        # x = c._pagesize[0] / 2
+        #
+        # lines = [
+        #     "this is line 1",
+        #     "this is line 2",
+        #     "this is line 3",
+        #     "this is line 4",
+        #     "this is line 5",
+        # ]
+        #
+        # for l in lines:
+        #     textob.textLine(l)
+        # c.drawCentredString(x, 0, textob2)
+        c.drawCentredString((c._pagesize[0] - text_width), inch, text)
         c.drawText(textob)
+        f = Table(t, rowHeights=inch)
+        f.setStyle(TableStyle([('FONTNAME', (0, 0), (-1, -1), "Verdana"),
+                               ('INNERGRID', (0, 0), (-1, -1), 0, colors.black),
+                               ('BOX', (0, 0), (-1, -1), 0, colors.black),
+                               ('ALIGN', (0, 0), (-1, -1), "CENTER"),
+                               ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
+        f.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        f.drawOn(c, inch, inch + 20)
         c.showPage()
         c.save()
         buf.seek(0)

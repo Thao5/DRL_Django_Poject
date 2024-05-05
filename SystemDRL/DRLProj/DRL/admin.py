@@ -15,6 +15,7 @@ from .dao import order_drl_by_khoa
 
 class DRLAppAdminSite(admin.AdminSite):
     site_header = "TRANG QUẢN TRỊ HỆ THỐNG ĐÁNG GIÁ ĐIỂM RÈN LUYỆN"
+    index_title = "TRANG QUẢN TRỊ HỆ THỐNG ĐÁNG GIÁ ĐIỂM RÈN LUYỆN"
 
     def get_urls(self):
         return [
@@ -22,10 +23,12 @@ class DRLAppAdminSite(admin.AdminSite):
                ] + super().get_urls()
 
     def stats_view(self, request):
-        stats = order_drl_by_khoa(request.GET.get('name'))
+        stats = order_drl_by_khoa(request.GET)
+        print(stats)
         return TemplateResponse(request, 'admin/stats_view.html',{
             'stats': stats,
-            'site_header': DRLAppAdminSite.site_header
+            'site_header': DRLAppAdminSite.site_header,
+            'index_title': 'STATS'
         })
 
 
