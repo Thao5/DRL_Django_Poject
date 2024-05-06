@@ -99,6 +99,12 @@ class UserAdmin(admin.ModelAdmin):
                     .format(url=obj.image.name)
             )
 
+    # def save_model(self, request, obj, form, change):
+    #     print(obj.password)
+    #     obj.password = obj.set_password(obj.password)
+    #     obj.save()
+    #     super().save_model(request, obj, form, change)
+
 
 admin_site = DRLAppAdminSite(name="myapp")
 

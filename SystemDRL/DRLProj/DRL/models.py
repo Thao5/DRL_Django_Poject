@@ -10,6 +10,10 @@ class User(AbstractUser):
     avatar = CloudinaryField('avatar', null=True)
     phone = models.CharField(max_length=10, unique=True, null=True)
 
+    def save(self, *args, **kwargs):
+        self.set_password(self.password)
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = "Người dùng"
 
