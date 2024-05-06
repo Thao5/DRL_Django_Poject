@@ -12,7 +12,7 @@ from .models import Khoa, UserSV
 #         q = q.objects.filter(category_id=cate)
 
 def order_drl_by_khoa(req):
-    if req and req.get('khoa') or req.get('lop'):
+    if req and (req.get('khoa') and req.get('khoa').strip() != '') or (req.get('lop') and req.get('lop').strip() != ''):
         if req.get('khoa') is not None and req.get('khoa').strip() != '':
             return UserSV.objects.filter(khoa__name__icontains=req.get('khoa')).annotate(diem=F('thanhtichngoaikhoa__diem'))\
                 .values('mssv', 'first_name', 'last_name', 'diem').order_by('-diem')

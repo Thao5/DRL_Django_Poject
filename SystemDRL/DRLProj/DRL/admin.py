@@ -24,11 +24,14 @@ class DRLAppAdminSite(admin.AdminSite):
 
     def stats_view(self, request):
         stats = order_drl_by_khoa(request.GET)
-        print(stats)
+        khoas = Khoa.objects.all()
+        lops = Lop.objects.all()
         return TemplateResponse(request, 'admin/stats_view.html',{
             'stats': stats,
             'site_header': DRLAppAdminSite.site_header,
-            'index_title': 'STATS'
+            'index_title': 'STATS',
+            'khoas': khoas,
+            'lops': lops
         })
 
 

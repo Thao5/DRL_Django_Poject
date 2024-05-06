@@ -262,7 +262,6 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView):
         pdfmetrics.registerFont(TTFont('Verdana', 'Verdana.ttf'))
         # name = self.request.query_params.get('name')
         drls = order_drl_by_khoa(self.request.query_params)
-        print(drls)
         buf = io.BytesIO()
         c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
         c.setFont("Verdana", 14)
@@ -280,9 +279,9 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView):
         # textob.setTextOrigin(inch, inch)
         textob.setFont("Vera", 14)
 
-        t = [[], []]
+        t = [['MSSV', 'Họ', 'Tên', 'Điểm'], []]
 
-        i = 0
+        i = 1
         for d in drls:
             # textob.textLine(d.get('mssv'))
             # textob.textLine(d.get('first_name'))
@@ -294,10 +293,7 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView):
             t[i].append(str(d.get('diem')))
             i = i + 1
 
-        t[i].append('MSSV')
-        t[i].append('Họ')
-        t[i].append('Tên')
-        t[i].append('Điểm')
+        t = t[::-1]
 
         # x = c._pagesize[0] / 2
         #
