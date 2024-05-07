@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
 from ckeditor.fields import RichTextField
 from cloudinary.models import CloudinaryField
+from django.utils import timezone
+from django.utils.timezone import now
+
 
 # Create your models here.
 
@@ -20,6 +23,8 @@ class User(AbstractUser):
 
 class UserSV(User):
     mssv = models.CharField(max_length=10, unique=True, default='0000000000')
+    ngay_sinh = models.DateField(default=timezone.now())
+    ngay_nhap_hoc = models.DateField(default=timezone.now())
     khoa = models.ForeignKey('Khoa', on_delete=models.SET_NULL, null=True)
     lop = models.ForeignKey('Lop', on_delete=models.SET_NULL, null=True)
     # thanh_tich_ngoai_khoa = models.OneToOneField('ThanhTichNgoaiKhoa', on_delete=models.SET_NULL, null=True)
@@ -27,6 +32,11 @@ class UserSV(User):
 
     class Meta:
         verbose_name = "Sinh viên"
+
+    def save(self, *args, **kwargs):
+        if (UserSV.objects.all().count() + 1) > 0:
+            self.mssv = f'{(UserSV.objects.all().count()+1):010}'
+        super().save(*args, **kwargs)
 
 
 class BaseModel(models.Model):

@@ -77,6 +77,9 @@ class UserSVSerializer(ModelSerializer):
         extra_kwargs = {
             'password': {
                 'write_only': True
+            },
+            'mssv': {
+                'read_only': True
             }
         }
 

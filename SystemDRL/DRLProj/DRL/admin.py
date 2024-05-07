@@ -106,13 +106,34 @@ class UserAdmin(admin.ModelAdmin):
     #     super().save_model(request, obj, form, change)
 
 
+class UserSVAdmin(admin.ModelAdmin):
+    def group(self, user):
+        groups = []
+        for group in user.groups.all():
+            groups.append(group.name)
+        return ' '.join(groups)
+
+    group.short_description = 'Groups'
+    list_display = ['id', 'mssv', 'first_name', 'last_name', 'username', 'email', 'phone', 'group']
+    list_filter = ['id', 'first_name', 'username', 'email', 'mssv']
+    search_fields = ['first_name', 'username', 'email', 'mssv']
+    readonly_fields = ('MSSV', )
+
+    def MSSV(self, obj):
+        return f'{(UserSV.objects.all().count()+1):010}'
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields["mssv"].widget = forms.HiddenInput()
+        return form
+
 admin_site = DRLAppAdminSite(name="myapp")
 
 admin_site.register(HoatDong,HoatDongAdmin)
 admin_site.register(Lop, LopAdmin)
 admin_site.register(Khoa, LopAdmin)
 admin_site.register(User, UserAdmin)
-admin_site.register(UserSV)
+admin_site.register(UserSV, UserSVAdmin)
 admin_site.register(Permission)
 admin_site.register(Tag)
 admin_site.register(Comment)
