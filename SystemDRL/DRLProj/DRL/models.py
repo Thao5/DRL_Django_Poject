@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
 from ckeditor.fields import RichTextField
@@ -16,7 +18,8 @@ class User(AbstractUser):
     phone = models.CharField(max_length=10, unique=True, null=True)
 
     def save(self, *args, **kwargs):
-        self.set_password(self.password)
+        if self.pk is None:
+            self.set_password(self.password)
         super().save(*args, **kwargs)
 
     class Meta:
@@ -25,8 +28,8 @@ class User(AbstractUser):
 
 class UserSV(User):
     mssv = models.CharField(max_length=10, unique=True, default='0000000000')
-    ngay_sinh = models.DateField(default=timezone.now())
-    ngay_nhap_hoc = models.DateField(default=timezone.now())
+    ngay_sinh = models.DateField(default=datetime.date.today)
+    ngay_nhap_hoc = models.DateField(default=datetime.date.today)
     khoa = models.ForeignKey('Khoa', on_delete=models.SET_NULL, null=True)
     lop = models.ForeignKey('Lop', on_delete=models.SET_NULL, null=True)
     # thanh_tich_ngoai_khoa = models.OneToOneField('ThanhTichNgoaiKhoa', on_delete=models.SET_NULL, null=True)
@@ -36,9 +39,12 @@ class UserSV(User):
         verbose_name = "Sinh viên"
 
     def save(self, *args, **kwargs):
-        if (UserSV.objects.all().count() + 1) > 0:
-            self.mssv = f'{(UserSV.objects.all().count()+1):010}'
-        super().save(*args, **kwargs)
+        tmp = 0
+        if self.mssv == "0000000000":
+            tmp = UserSV.objects.all().count()
+        if (tmp + 1) > 0 and self.mssv == "0000000000":
+            self.mssv = f'{(tmp + 1):010}'
+        super(UserSV, self).save(*args, **kwargs)
 
 
 class BaseModel(models.Model):

@@ -126,7 +126,6 @@ class UserSVSerializer(ModelSerializer):
         # ids = [hd.get('id') for hd in hds_data if hd]
         # h = HoatDong.objects.filter(id__in=ids)
         user = UserSV(**data)
-        user.set_password(data['password'])
         user.username = user.email
         # user.hoat_dongs.add(*h)
         user.save()
