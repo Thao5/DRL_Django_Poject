@@ -34,6 +34,16 @@
         </select>
     </div>
 
+    <div class="form-group">
+        <label for="hk">Học kì</label>
+        <select class="form-control" id="hk" name="hk">
+            <option selected value="">Tất cả</option>
+            {%for hk in hks%}
+            <option value="{{hk.id}}">{{hk.name}}({{hk.nien_khoa}})</option>
+            {%endfor%}
+        </select>
+    </div>
+
 
     <input type="submit" value="Thống kê" />
 </form>

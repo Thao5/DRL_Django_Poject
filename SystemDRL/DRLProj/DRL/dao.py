@@ -1,4 +1,4 @@
-from django.db.models import Count, F
+from django.db.models import Count, F, Q
 from .models import Khoa, UserSV
 
 
@@ -12,16 +12,15 @@ from .models import Khoa, UserSV
 #         q = q.objects.filter(category_id=cate)
 
 def order_drl_by_khoa(req):
-    if req and (req.get('khoa') and req.get('khoa').strip() != '') or (req.get('lop') and req.get('lop').strip() != ''):
+    condition = Q(thanhtichngoaikhoa__diem__gt=0)
+    if req and (req.get('khoa') and req.get('khoa').strip() != '') or (req.get('lop') and req.get('lop').strip() != '') or (req.get('hk')):
         if req.get('khoa') is not None and req.get('khoa').strip() != '':
-            return UserSV.objects.filter(khoa__name__icontains=req.get('khoa')).filter(thanhtichngoaikhoa__diem__gt=0).annotate(diem=F('thanhtichngoaikhoa__diem'))\
-                .values('mssv', 'first_name', 'last_name', 'diem').order_by('-diem')
+            condition &= Q(khoa__name__icontains=req.get('khoa'))
         if req.get('lop') is not None and req.get('lop').strip() != '':
-            return UserSV.objects.filter(lop__name__icontains=req.get('lop')).filter(thanhtichngoaikhoa__diem__gt=0).annotate(
-                diem=F('thanhtichngoaikhoa__diem')) \
-                .values('mssv', 'first_name', 'last_name', 'diem').order_by('-diem')
+            condition &= Q(lop__name__icontains=req.get('lop'))
+        if req.get('hk') is not None and req.get('hk').strip() != '':
+            condition &= Q(thanhtichngoaikhoa__hoc_ki__id=int(req.get('hk')))
 
-    else:
-        return UserSV.objects.annotate(diem=F('thanhtichngoaikhoa__diem')).filter(thanhtichngoaikhoa__diem__gt=0) \
-            .values('mssv', 'first_name', 'last_name', 'diem').order_by(
-            '-diem')
+    return UserSV.objects.annotate(diem=F('thanhtichngoaikhoa__diem')).filter(condition) \
+        .values('mssv', 'first_name', 'last_name', 'diem').order_by(
+        '-diem')

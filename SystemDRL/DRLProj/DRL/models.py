@@ -5,6 +5,8 @@ from cloudinary.models import CloudinaryField
 from django.utils import timezone
 from django.utils.timezone import now
 
+from DRLProj.settings import MEDIA_ROOT
+
 
 # Create your models here.
 
@@ -59,6 +61,7 @@ class HoatDong(BaseModel):
     tags = models.ManyToManyField('Tag')
     quy_che = models.ForeignKey('QuyChe', on_delete=models.SET_NULL, null=True)
     user_svs = models.ManyToManyField('UserSV', blank=True)
+    hoc_ki = models.ForeignKey('HocKi', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.name
@@ -112,15 +115,22 @@ class HocKi(BaseModel):
     thoi_gian_bat_dau = models.DateField()
     thoi_gian_ket_thuc = models.DateField()
 
+    def __str__(self):
+        return f"{self.name}({self.nien_khoa})"
+
     class Meta:
         verbose_name = "Học kì"
 
 
 class SinhVienMinhChungHoatDong(BaseModel):
-    minh_chung = models.FileField()
+    minh_chung = models.FileField(upload_to=f'{MEDIA_ROOT}minh_chung/')
     trang_thai = models.CharField(max_length=20)
     sinh_vien = models.ForeignKey(UserSV, on_delete=models.CASCADE)
     hoat_dong = models.ForeignKey(HoatDong, on_delete=models.CASCADE)
+    nguoi_kiem_tra_minh_chung = models.ForeignKey(User, on_delete=models.CASCADE, related_name="nguoi_minh_chung_hoat_dong", null=True)
+
+    def __str__(self):
+        return f"{self.sinh_vien.last_name} {self.sinh_vien.first_name} {self.hoat_dong.hoc_ki.name}({self.hoat_dong.hoc_ki.nien_khoa})"
 
     class Meta:
         verbose_name = "Sinh viên minh chứng hoạt động"
@@ -131,6 +141,10 @@ class ThanhTichNgoaiKhoa(BaseModel):
     thanh_tich = models.CharField(max_length=15)
     # quy_ches = models.ManyToManyField('QuyChe')
     sinh_vien = models.OneToOneField(UserSV, on_delete=models.SET_NULL, null=True)
+    hoc_ki = models.ForeignKey('HocKi', on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return f"{self.sinh_vien.last_name} {self.sinh_vien.first_name} {self.hoc_ki.name}({self.hoc_ki.nien_khoa})"
 
     class Meta:
         verbose_name = "Thành tích ngoại khóa"

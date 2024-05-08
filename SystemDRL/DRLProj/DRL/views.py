@@ -89,7 +89,7 @@ class UserSVViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
         }).data, status=status.HTTP_200_OK)
 
 
-class MinhChungViewSet(viewsets.ViewSet, generics.ListAPIView):
+class MinhChungViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView):
     queryset = SinhVienMinhChungHoatDong.objects.all()
     serializer_class = MinhChungSerializer
     pagination_class = DRLPaginator
@@ -97,6 +97,7 @@ class MinhChungViewSet(viewsets.ViewSet, generics.ListAPIView):
     permission_classes = (HasGroupTLSVPermission, )
     required_groups = {
         'GET': ['TLSV'],
+        'POST': ['SV']
     }
 
     def get_queryset(self):
@@ -270,7 +271,6 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView):
         text = u"THỐNG KÊ ĐIỂM RÈN LUYỆN THEO KHOA"
         text_width = stringWidth(text, fontName="Vera", fontSize=14)
         # y = 0 # wherever you want your text to appear
-        print((c._pagesize[0] - text_width) / float(2.0))
         textob = c.beginText()
         # textob.textOut(text)
         textob.setTextOrigin(inch, inch)
@@ -294,20 +294,6 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView):
             i = i + 1
 
         t = t[::-1]
-
-        # x = c._pagesize[0] / 2
-        #
-        # lines = [
-        #     "this is line 1",
-        #     "this is line 2",
-        #     "this is line 3",
-        #     "this is line 4",
-        #     "this is line 5",
-        # ]
-        #
-        # for l in lines:
-        #     textob.textLine(l)
-        # c.drawCentredString(x, 0, textob2)
         c.drawCentredString((c._pagesize[0] - text_width), inch, text)
         c.drawText(textob)
         f = Table(t, rowHeights=inch)

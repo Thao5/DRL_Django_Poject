@@ -49,9 +49,42 @@ class TagSerializer(ModelSerializer):
 
 
 class MinhChungSerializer(ModelSerializer):
+    minh_chung = serializers.SerializerMethodField(source='minh_chung')
+
+    def get_minh_chung(self, obj):
+        request = self.context.get('request')
+        if obj.minh_chung:
+            if request:
+                return request.build_absolute_uri("/static/minh_chung/%s" % obj.minh_chung.name)
+            return "/%s" % obj.minh_chung.name
+
+    def create(self, validated_data):
+        user = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+        data = validated_data.copy()
+        mc = SinhVienMinhChungHoatDong(**data)
+        u = UserSerializer(user).data
+        sv = UserSV.objects.get(username=u.get('username'))
+        mc.minh_chung = request.FILES.get('minh_chung')
+        mc.sinh_vien_id = sv.id
+        mc.trang_thai = "Đang xử lý"
+        mc.save()
+
+        return mc
+
     class Meta:
         model = SinhVienMinhChungHoatDong
-        fields = ['minh_chung', 'trang_thai', 'hoat_dong', 'sinh_vien']
+        fields = ['minh_chung', 'trang_thai', 'hoat_dong', 'sinh_vien', 'nguoi_kiem_tra_minh_chung']
+        extra_kwargs = {
+            'trang_thai': {
+                'read_only': True
+            },
+            'sinh_vien': {
+                'read_only': True
+            }
+        }
 
 
 class BaseSerializer(ModelSerializer):
