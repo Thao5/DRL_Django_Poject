@@ -102,7 +102,16 @@ class BaseSerializer(ModelSerializer):
 class UserSVSerializer(ModelSerializer):
     # avatar = serializers.SerializerMethodField(source='avatar')
     # hoat_dongs = HoatDongSerializer(many=True)
-
+    khoa = KhoaSerializer(read_only=True)
+    khoa_id = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True
+    )
+    lop = LopSerializer(read_only=True)
+    lop_id = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True
+    )
     class Meta:
         model = UserSV
         ref_name = "User SV"
@@ -214,7 +223,6 @@ class UserSerializer(ModelSerializer):
     def create(self, validated_data):
         data = validated_data.copy()
         user = User(**data)
-        user.set_password(data['password'])
         user.save()
 
         return user
