@@ -7,8 +7,8 @@ from django.core.serializers import serialize
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.template.defaultfilters import upper
 from drf_yasg.utils import swagger_auto_schema
-from pytz import unicode
 from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.pdfmetrics import stringWidth
@@ -31,6 +31,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
 from .dao import order_drl_by_khoa
+from .perms import is_in_group
 
 
 # Create your views here.
@@ -141,6 +142,10 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
 
     @action(methods=['get'], url_path="current", detail=False)
     def get_current(self, request):
+        u = User.objects.get(username=request.user)
+        if is_in_group(u, "SV"):
+            usv = UserSV.objects.get(username=u.username)
+            return Response(UserSVSerializer(usv).data, status=status.HTTP_200_OK)
         return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
 
@@ -176,7 +181,7 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
         file_name = f"{self.get_object().id}_{strftime('%Y-%m-%d-%H-%M')}"
         s = f"{settings.MEDIA_ROOT}/diem_danh/{file_name}.csv"
 
-        with open(s, 'a+', newline='') as csv_file:
+        with open(s, 'a+', newline='', encoding='utf8') as csv_file:
             write = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
             line = [request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'),
                     request.data.get('email')]
@@ -201,18 +206,24 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
 
     @action(methods=['POST'], url_path="addlike", detail=True)
     def add_like(self, request, pk):
-        like = Like()
-        like.hoat_dong = self.get_object()
-        like.user = request.user
-        like.save()
+        like = Like.objects.get(user_id=User.objects.get(username=request.user.username).id, hoat_dong_id=self.get_object().id)
+        if like:
+            like.is_like = not like.is_like
+            like.save()
+            return Response(LikeSerializer(like).data, status=status.HTTP_200_OK)
+        else:
+            like = Like()
+            like.hoat_dong = self.get_object()
+            like.user = request.user
+            like.save()
         return Response(LikeSerializer(like).data, status=status.HTTP_201_CREATED)
 
-    @action(methods=['POST'], url_path="dislike", detail=True)
-    def dislike(self, request, pk):
-        like = Like.objects.get(user_id=User.objects.get(username=request.user.username).id, hoat_dong_id=self.get_object().id)
-        like.is_like = False
-        like.save()
-        return Response(LikeSerializer(like).data, status=status.HTTP_200_OK)
+    # @action(methods=['POST'], url_path="dislike", detail=True)
+    # def dislike(self, request, pk):
+    #     like = Like.objects.get(user_id=User.objects.get(username=request.user.username).id, hoat_dong_id=self.get_object().id)
+    #     like.is_like = !like.is_like
+    #     like.save()
+    #     return Response(LikeSerializer(like).data, status=status.HTTP_200_OK)
 
 
     # @action(methods=['POST'], url_path="diemdanh", detail=True)
@@ -287,32 +298,29 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView):
     def StatsPDF(self, request):
         pdfmetrics.registerFont(TTFont("Vera", "Vera.ttf"))  # <- Important
         pdfmetrics.registerFont(TTFont('Verdana', 'Verdana.ttf'))
-        # name = self.request.query_params.get('name')
         drls = order_drl_by_khoa(self.request.query_params)
         buf = io.BytesIO()
         c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
         c.setFont("Verdana", 14)
-        # PAGE_WIDTH = defaultPageSize[0]
-        # PAGE_HEIGHT = defaultPageSize[1]
-        text = u"THỐNG KÊ ĐIỂM RÈN LUYỆN THEO KHOA"
+        text = u"THỐNG KÊ ĐIỂM RÈN LUYỆN"
+        tmp = ''
+        if self.request.query_params.get('khoa') and self.request.query_params.get('khoa').strip() != '':
+            tmp += u' THEO KHOA {}'.format(self.request.query_params.get('khoa'))
+        if self.request.query_params.get('lop') and self.request.query_params.get('lop').strip() != '':
+            tmp += u' THEO LỚP {}'.format(self.request.query_params.get('lop'))
+        if self.request.query_params.get('hk') and self.request.query_params.get('hk').strip() != '':
+            h = HocKi.objects.get(id=int(self.request.query_params.get('hk')))
+            tmp += u' THEO {}({})'.format(upper(h.name), h.nien_khoa)
+        text = u'{}{}'.format(text, tmp)
         text_width = stringWidth(text, fontName="Vera", fontSize=14)
-        # y = 0 # wherever you want your text to appear
         textob = c.beginText()
-        # textob.textOut(text)
         textob.setTextOrigin(inch, inch)
-        # textob.setFont("Helvetica", 14)
-        # textob = c.beginText()
-        # textob.setTextOrigin(inch, inch)
         textob.setFont("Vera", 14)
 
         t = [['MSSV', 'Họ', 'Tên', 'Điểm'], []]
 
         i = 1
         for d in drls:
-            # textob.textLine(d.get('mssv'))
-            # textob.textLine(d.get('first_name'))
-            # textob.textLine(d.get('last_name'))
-            # textob.textLine(str(d.get('diem')))
             t[i].append(d.get('mssv'))
             t[i].append(d.get('last_name'))
             t[i].append(d.get('first_name'))
@@ -334,6 +342,20 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView):
         c.save()
         buf.seek(0)
         return FileResponse(buf, as_attachment=True, filename="statsPDF.pdf")
+
+    @action(methods=['GET'], url_path="statscsv", detail=False)
+    def StatsCSV(self, request):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="statsCSV.csv"'
+
+        response.write(u'\ufeff'.encode('utf8'))
+        writer = csv.writer(response)
+        writer.writerow(["MSSV", "Last name", "First name", "diem"])
+        drls = order_drl_by_khoa(self.request.query_params)
+        for d in drls:
+            writer.writerow([d.get('mssv'), d.get('last_name'), d.get('first_name'), str(d.get('diem'))])
+
+        return response
 
 
 

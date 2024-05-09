@@ -53,19 +53,41 @@
 </div>
 
 <a id="downlStats" style="color: #fff" class="btn btn-success" href="javascript:;" onclick="f1(); return false;">Download PDF</a>
+<a id="downlStatsCSV" style="color: #fff" class="btn btn-success" href="javascript:;" onclick="f2(); return false;">Download CSV</a>
 
 <script type="text/javascript">
     document.getElementById("downlStats").onclick = function() {
         const urlParams = new URLSearchParams(window.location.search);
         let myParam = urlParams.get('khoa');
         let myParam2 = urlParams.get('lop');
+        let myParam3 = urlParams.get('hk');
         if(myParam == null){
             myParam = '';
         }
         if(myParam2 == null){
             myParam2 = '';
         }
-        document.getElementById("downlStats").href = "/thanhtichs/statspdf/" + "?" + "khoa=" + myParam + "&" + "lop=" + myParam2;
+        if(myParam3 == null){
+            myParam3 = '';
+        }
+        document.getElementById("downlStats").href = "/thanhtichs/statspdf/" + "?" + "khoa=" + myParam + "&" + "lop=" + myParam2 + "&" + "hk=" + myParam3;
+    }
+
+    document.getElementById("downlStatsCSV").onclick = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        let myParam = urlParams.get('khoa');
+        let myParam2 = urlParams.get('lop');
+        let myParam3 = urlParams.get('hk');
+        if(myParam == null){
+            myParam = '';
+        }
+        if(myParam2 == null){
+            myParam2 = '';
+        }
+        if(myParam3 == null){
+            myParam3 = '';
+        }
+        document.getElementById("downlStatsCSV").href = "/thanhtichs/statscsv/" + "?" + "khoa=" + myParam + "&" + "lop=" + myParam2 + "&" + "hk=" + myParam3;
     }
 </script>
 

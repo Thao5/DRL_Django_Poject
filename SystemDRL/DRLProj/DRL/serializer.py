@@ -185,9 +185,25 @@ class HoatDongSerializer(ModelSerializer):
         return hoat_dong
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'content']
+
+
 class HoatDongSerializerDetail(HoatDongSerializer):
-    like = serializers.SerializerMethodField()
-    comment = serializers.SerializerMethodField()
+    # like = serializers.SerializerMethodField(source="like")
+    # comment = serializers.SerializerMethodField(source="comment")
+    like_set = LikeSerializer(many=True, read_only=True)
+    like_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True
+    )
+    comment_set = CommentSerializer(many=True, read_only=True)
+    comment_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True
+    )
 
     # def __init__(self, *args, **kwargs):
     #     many = kwargs.pop('many', True)
@@ -205,7 +221,7 @@ class HoatDongSerializerDetail(HoatDongSerializer):
 
     class Meta:
         model = HoatDongSerializer.Meta.model
-        fields = HoatDongSerializer.Meta.fields + ['like'] + ['comment']
+        fields = HoatDongSerializer.Meta.fields + ['like_set'] + ['comment_set'] + ['like_ids'] + ['comment_ids']
 
 
 class UserSerializer(ModelSerializer):
@@ -235,7 +251,4 @@ class UserSerializer(ModelSerializer):
     #         return "/%s" % obj.avatar.name
 
 
-class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
-        fields = ['id', 'content']
+
