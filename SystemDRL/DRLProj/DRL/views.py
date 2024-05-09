@@ -304,7 +304,6 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView):
         drls = order_drl_by_khoa(self.request.query_params)
         buf = io.BytesIO()
         c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
-        c.setFont("Verdana", 14)
         text = u"THỐNG KÊ ĐIỂM RÈN LUYỆN"
         tmp = ''
         if self.request.query_params.get('khoa') and self.request.query_params.get('khoa').strip() != '':
@@ -316,9 +315,13 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView):
             tmp += u' THEO {}({})'.format(upper(h.name), h.nien_khoa)
         text = u'{}{}'.format(text, tmp)
         text_width = stringWidth(text, fontName="Vera", fontSize=14)
+        font_size=14
+        if text_width > 600:
+            font_size = 10
         textob = c.beginText()
         textob.setTextOrigin(inch, inch)
-        textob.setFont("Vera", 14)
+        textob.setFont("Vera", font_size)
+        c.setFont("Verdana", font_size)
 
         t = [['MSSV', 'Họ', 'Tên', 'Điểm'], []]
 
@@ -331,7 +334,7 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView):
             i = i + 1
 
         t = t[::-1]
-        c.drawCentredString((c._pagesize[0] - text_width), inch, text)
+        c.drawCentredString(330, inch, text)
         c.drawText(textob)
         f = Table(t, rowHeights=inch)
         f.setStyle(TableStyle([('FONTNAME', (0, 0), (-1, -1), "Verdana"),
