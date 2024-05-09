@@ -17,6 +17,7 @@ from reportlab.platypus import Table, TableStyle
 from reportlab.rl_settings import defaultPageSize
 from rest_framework.decorators import action
 from rest_framework import viewsets, permissions, generics, status, parsers, serializers
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from .models import HoatDong, Tag, Lop, Khoa, User, UserSV, QuyChe, ThanhTichNgoaiKhoa, Comment, Like, SinhVienMinhChungHoatDong, HocKi
 from .serializer import HoatDongSerializerDetail, HocKiSerializer, KhoaSerializer, CommentSerializer, UserSVSerializer, HoatDongSerializer, LikeSerializer, LopSerializer, QuyCheSerializer, TagSerializer, ThanhTichNgoaiKhoaSerializer, UserSerializer, MinhChungSerializer
@@ -160,7 +161,7 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
     queryset = HoatDong.objects.all()
     serializer_class = HoatDongSerializerDetail
     pagination_class = DRLPaginator
-    parser_classes = [parsers.MultiPartParser, parsers.FormParser]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, JSONParser]
 
     def get_queryset(self):
         queries = self.queryset
@@ -188,6 +189,16 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
         # users = UserSV.objects.values(request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'), request.data.get('email'))
 
         return HttpResponse(status=200)
+
+    @action(methods=['POST'], url_path="addcomment", detail=True)
+    def add_comment(self, request, pk):
+        comment = Comment()
+        comment.hoat_dong = self.get_object()
+        comment.content = request.data.get('content')
+        comment.user = request.user
+        comment.save()
+        return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
+
 
     # @action(methods=['POST'], url_path="diemdanh", detail=True)
     # def diem_danh(self, request, pk):
