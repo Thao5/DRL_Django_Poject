@@ -206,7 +206,10 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
 
     @action(methods=['POST'], url_path="addlike", detail=True)
     def add_like(self, request, pk):
-        like = Like.objects.get(user_id=User.objects.get(username=request.user.username).id, hoat_dong_id=self.get_object().id)
+        try:
+            like = Like.objects.get(user_id=User.objects.get(username=request.user.username).id, hoat_dong_id=self.get_object().id)
+        except Like.DoesNotExist:
+            like = None
         if like:
             like.is_like = not like.is_like
             like.save()

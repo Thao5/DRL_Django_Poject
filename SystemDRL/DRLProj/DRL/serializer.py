@@ -112,6 +112,7 @@ class UserSVSerializer(ModelSerializer):
         child=serializers.IntegerField(),
         write_only=True
     )
+
     class Meta:
         model = UserSV
         ref_name = "User SV"
@@ -185,10 +186,43 @@ class HoatDongSerializer(ModelSerializer):
         return hoat_dong
 
 
+class UserSerializer(ModelSerializer):
+    # avatar = serializers.SerializerMethodField(source='avatar')
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username', 'password', 'email', 'phone', 'avatar']
+        extra_kwargs = {
+            'password': {
+                'write_only': True
+            }
+        }
+
+    def create(self, validated_data):
+        data = validated_data.copy()
+        user = User(**data)
+        user.save()
+
+        return user
+
+    # def get_avatar(self, obj):
+    #     request = self.context.get('request')
+    #     if obj.avatar:
+    #         if request:
+    #             return request.build_absolute_uri("/static/%s" % obj.avatar.name)
+    #         return "/%s" % obj.avatar.name
+
+
 class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    user_id = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True
+    )
+
     class Meta:
         model = Comment
-        fields = ['id', 'content']
+        fields = ['id', 'content', 'user', 'user_id']
 
 
 class HoatDongSerializerDetail(HoatDongSerializer):
@@ -222,33 +256,6 @@ class HoatDongSerializerDetail(HoatDongSerializer):
     class Meta:
         model = HoatDongSerializer.Meta.model
         fields = HoatDongSerializer.Meta.fields + ['like_set'] + ['comment_set'] + ['like_ids'] + ['comment_ids']
-
-
-class UserSerializer(ModelSerializer):
-    # avatar = serializers.SerializerMethodField(source='avatar')
-
-    class Meta:
-        model = User
-        fields = ['first_name', 'last_name', 'username', 'password', 'email', 'phone', 'avatar']
-        extra_kwargs = {
-            'password': {
-                'write_only': True
-            }
-        }
-
-    def create(self, validated_data):
-        data = validated_data.copy()
-        user = User(**data)
-        user.save()
-
-        return user
-
-    # def get_avatar(self, obj):
-    #     request = self.context.get('request')
-    #     if obj.avatar:
-    #         if request:
-    #             return request.build_absolute_uri("/static/%s" % obj.avatar.name)
-    #         return "/%s" % obj.avatar.name
 
 
 
