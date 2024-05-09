@@ -199,6 +199,21 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
         comment.save()
         return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
 
+    @action(methods=['POST'], url_path="addlike", detail=True)
+    def add_like(self, request, pk):
+        like = Like()
+        like.hoat_dong = self.get_object()
+        like.user = request.user
+        like.save()
+        return Response(LikeSerializer(like).data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['POST'], url_path="dislike", detail=True)
+    def dislike(self, request, pk):
+        like = Like.objects.get(user_id=User.objects.get(username=request.user.username).id, hoat_dong_id=self.get_object().id)
+        like.is_like = False
+        like.save()
+        return Response(LikeSerializer(like).data, status=status.HTTP_200_OK)
+
 
     # @action(methods=['POST'], url_path="diemdanh", detail=True)
     # def diem_danh(self, request, pk):
