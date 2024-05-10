@@ -168,6 +168,11 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
     pagination_class = DRLPaginator
     parser_classes = [parsers.MultiPartParser, parsers.FormParser, JSONParser]
 
+    def get_permissions(self):
+        if self.action in ['add_comment', 'add_like', 'sinh_vien_dang_ky']:
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
+
     def get_queryset(self):
         queries = self.queryset
         q = self.request.query_params.get('q')
