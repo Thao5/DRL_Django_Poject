@@ -60,6 +60,8 @@ MIDDLEWARE = [
 
 import cloudinary
 
+CLOUDINARY_URL = "https://res.cloudinary.com/dtlqyvkvu/image/upload/"
+
 cloudinary.config(
     cloud_name="dtlqyvkvu",
     api_key="654129736974748",

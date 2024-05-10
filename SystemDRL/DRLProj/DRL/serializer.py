@@ -5,6 +5,8 @@ from .models import HoatDong, Tag, Lop, Khoa, User, UserSV, QuyChe, ThanhTichNgo
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
+from DRLProj import settings
+
 
 class LopSerializer(ModelSerializer):
     class Meta:
@@ -100,16 +102,14 @@ class BaseSerializer(ModelSerializer):
 
 
 class UserSVSerializer(ModelSerializer):
-    # avatar = serializers.SerializerMethodField(source='avatar')
+    avatar = serializers.SerializerMethodField(source='avatar')
     # hoat_dongs = HoatDongSerializer(many=True)
     khoa = KhoaSerializer(read_only=True)
-    khoa_id = serializers.ListField(
-        child=serializers.IntegerField(),
+    khoa_id = serializers.IntegerField(
         write_only=True
     )
     lop = LopSerializer(read_only=True)
-    lop_id = serializers.ListField(
-        child=serializers.IntegerField(),
+    lop_id = serializers.IntegerField(
         write_only=True
     )
 
@@ -143,6 +143,14 @@ class UserSVSerializer(ModelSerializer):
         user.save()
 
         return user
+
+    def get_avatar(self, obj):
+        request = self.context.get('request')
+        print('ava')
+        if obj.avatar:
+            if request:
+                return f"{settings.CLOUDINARY_URL}{obj.avatar}"
+            return f"{settings.CLOUDINARY_URL}{obj.avatar}"
 
 
 class HoatDongSerializer(ModelSerializer):
@@ -205,18 +213,17 @@ class UserSerializer(ModelSerializer):
 
         return user
 
-    # def get_avatar(self, obj):
-    #     request = self.context.get('request')
-    #     if obj.avatar:
-    #         if request:
-    #             return request.build_absolute_uri("/static/%s" % obj.avatar.name)
-    #         return "/%s" % obj.avatar.name
+    def get_avatar(self, obj):
+        request = self.context.get('request')
+        if obj.avatar:
+            if request:
+                return f"{settings.CLOUDINARY_URL}{obj.avatar}"
+            return f"{settings.CLOUDINARY_URL}{obj.avatar}"
 
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    user_id = serializers.ListField(
-        child=serializers.IntegerField(),
+    user_id = serializers.IntegerField(
         write_only=True
     )
 

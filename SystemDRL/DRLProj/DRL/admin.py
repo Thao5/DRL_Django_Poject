@@ -92,14 +92,15 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ['id', 'first_name', 'last_name', 'username', 'email', 'phone', 'group']
     list_filter = ['id', 'first_name', 'username', 'email']
     search_fields = ['first_name', 'username', 'email']
-    readonly_fields = ['avatar']
 
-    def img(self, obj):
-        if obj:
-            return mark_safe(
-                '<img src="/static/{url}" width="120" />'\
-                    .format(url=obj.image.name)
-            )
+    # def get_form(self, request, obj=None, **kwargs):
+    #     form = super().get_form(request, obj, **kwargs)
+    #     form.base_fields["last_login"].widget = forms.HiddenInput()
+    #     form.base_fields["user_permissions"].widget = forms.HiddenInput()
+    #     form.base_fields["is_superuser"].widget = forms.HiddenInput()
+    #     form.base_fields["is_staff"].widget = forms.HiddenInput()
+    #     form.base_fields["date_joined"].widget = forms.HiddenInput()
+    #     return form
 
     # def save_model(self, request, obj, form, change):
     #     print(obj.password)
@@ -128,6 +129,7 @@ class UserSVAdmin(admin.ModelAdmin):
         form = super().get_form(request, obj, **kwargs)
         form.base_fields["mssv"].widget = forms.HiddenInput()
         return form
+
 
 admin_site = DRLAppAdminSite(name="myapp")
 

@@ -1,5 +1,6 @@
 import datetime
 
+import cloudinary
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
 from ckeditor.fields import RichTextField
@@ -18,7 +19,8 @@ class User(AbstractUser):
     phone = models.CharField(max_length=10, unique=True, null=True)
 
     def save(self, *args, **kwargs):
-        if self.pk is None:
+        u = User.objects.get(pk=self.pk)
+        if self.pk is None or self.password != u.password:
             self.set_password(self.password)
         super().save(*args, **kwargs)
 

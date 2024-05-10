@@ -175,6 +175,18 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
             queries = queries.filter(name__icontains=q)
         return queries
 
+    @action(methods=['POST'], url_path="sinhviendangky", detail=True)
+    def sinh_vien_dang_ky(self, request, pk):
+        hd = self.get_object()
+        u = User.objects.get(username=request.user.username)
+
+        if is_in_group(u, "SV"):
+            u = UserSV.objects.get(username=u.username)
+            hd.user_svs.add(u)
+        return Response(HoatDongSerializer(hd, context={
+            'request': request
+        }).data, status=status.HTTP_200_OK)
+
     @action(methods=['POST'], url_path="diemdanh", detail=True)
     def diem_danh(self, request, pk):
         # headers = ['MSSV', 'First Name', 'Last Name', 'Email']
