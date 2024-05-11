@@ -76,6 +76,16 @@ class UserSVViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
             queries = queries.filter(mssv__icontains=q)
         return queries
 
+    # def create(self, request, *args, **kwargs):
+    #     uploaded_file = request.FILES['avatar']
+    #     filename = uploaded_file.name
+    #     serializer = UserSVSerializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     user = UserSVSerializer.create(self, serializer.validated_data)
+    #     user.avatar = filename
+    #     user.save()
+    #     return super(UserSVViewSet, self).create(request, *args, **kwargs)
+
     @action(methods=['GET'], detail=True)
     def hoat_dongs(self, request, pk):
         hd = self.get_object().hoat_dongs.filter(active=True)

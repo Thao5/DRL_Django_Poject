@@ -102,7 +102,7 @@ class BaseSerializer(ModelSerializer):
 
 
 class UserSVSerializer(ModelSerializer):
-    avatar = serializers.SerializerMethodField(source='avatar')
+    avatar_path = serializers.SerializerMethodField(source='avatar')
     # hoat_dongs = HoatDongSerializer(many=True)
     khoa = KhoaSerializer(read_only=True)
     khoa_id = serializers.IntegerField(
@@ -144,7 +144,7 @@ class UserSVSerializer(ModelSerializer):
 
         return user
 
-    def get_avatar(self, obj):
+    def get_avatar_path(self, obj):
         request = self.context.get('request')
         print('ava')
         if obj.avatar:

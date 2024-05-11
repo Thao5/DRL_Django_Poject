@@ -125,9 +125,27 @@ class UserSVAdmin(admin.ModelAdmin):
     def MSSV(self, obj):
         return f'{(UserSV.objects.all().count()+1):010}'
 
+    def get_readonly_fields(self, request, obj=None):
+        path = request.path
+        path_tmp = ""
+        if obj is not None:
+            path_tmp = f'/admin/DRL/usersv/{obj.id}/change/'
+        if path == path_tmp:
+            self.readonly_fields = ('mssv',)
+        else:
+            self.readonly_fields = ('MSSV',)
+        return self.readonly_fields
+
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        form.base_fields["mssv"].widget = forms.HiddenInput()
+        path = request.path
+        # path_tmp = ""
+        # if obj is not None:
+        #     path_tmp = f'/admin/DRL/usersv/{obj.id}/change/'
+        # if path == path_tmp:
+
+        if path == '/admin/DRL/usersv/add/':
+            form.base_fields["mssv"].widget = forms.HiddenInput()
         return form
 
 

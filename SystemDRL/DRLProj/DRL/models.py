@@ -19,9 +19,13 @@ class User(AbstractUser):
     phone = models.CharField(max_length=10, unique=True, null=True)
 
     def save(self, *args, **kwargs):
-        u = User.objects.get(pk=self.pk)
-        if self.pk is None or self.password != u.password:
-            self.set_password(self.password)
+        if self.pk is None:
+            try:
+                u = User.objects.get(pk=self.pk)
+                if self.password != u.password:
+                    self.set_password(self.password)
+            except User.DoesNotExist:
+                self.set_password(self.password)
         super().save(*args, **kwargs)
 
     class Meta:
