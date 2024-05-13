@@ -1,5 +1,6 @@
 from rest_framework import permissions
 from django.contrib.auth.models import Group
+from .models import User
 
 
 def is_in_group(user, group_name):
@@ -29,4 +30,12 @@ class HasGroupTLSVPermission(permissions.BasePermission):
         # Return True if the user has all the required groups or is staff.
         return all([is_in_group(request.user, group_name) if group_name != "__all__" else True for group_name in
                     required_groups]) or (request.user and request.user.is_staff)
+
+
+class HasGroupPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_anonymous:
+            return False
+        u = User.objects.get(username=request.user.username)
+        return is_in_group(u, "TLSV") or is_in_group(u, "CTSV")
 

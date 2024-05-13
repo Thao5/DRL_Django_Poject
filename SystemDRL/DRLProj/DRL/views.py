@@ -1,5 +1,6 @@
 import csv
 import json
+from collections import defaultdict
 from time import strftime
 
 from django.contrib.auth.models import Group
@@ -31,7 +32,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
 from .dao import order_drl_by_khoa
-from .perms import is_in_group
+from .perms import is_in_group, HasGroupPermission
 
 
 # Create your views here.
@@ -88,15 +89,15 @@ class UserSVViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
 
     @action(methods=['GET'], detail=True)
     def hoat_dongs(self, request, pk):
-        hd = self.get_object().hoat_dongs.filter(active=True)
+        hd = self.get_object().hoatdong_set.filter(active=True)
         return Response(HoatDongSerializer(hd, many=True, context={
             'request': request
         }).data, status=status.HTTP_200_OK)
 
     @action(methods=['GET'], detail=True)
     def thanh_tichs(self, request, pk):
-        tt = self.get_object().thanh_tich_ngoai_khoa
-        return Response(ThanhTichNgoaiKhoaSerializer(tt, context={
+        tt = self.get_object().thanhtichngoaikhoa_set.filter(active=True)
+        return Response(ThanhTichNgoaiKhoaSerializer(tt, many=True, context={
             'request': request
         }).data, status=status.HTTP_200_OK)
 
@@ -177,10 +178,13 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
     serializer_class = HoatDongSerializerDetail
     pagination_class = DRLPaginator
     parser_classes = [parsers.MultiPartParser, parsers.FormParser, JSONParser]
+    hd_dict = defaultdict(list)
 
     def get_permissions(self):
         if self.action in ['add_comment', 'add_like', 'sinh_vien_dang_ky']:
             return [permissions.IsAuthenticated()]
+        if self.action in ['diem_danh', 'diem_danh_tong_ket', 'diem_danh_csv']:
+            return [HasGroupPermission()]
         return [permissions.AllowAny()]
 
     def get_queryset(self):
@@ -205,22 +209,78 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
     @action(methods=['POST'], url_path="diemdanh", detail=True)
     def diem_danh(self, request, pk):
         # headers = ['MSSV', 'First Name', 'Last Name', 'Email']
+        try:
+            sv = UserSV.objects.get(mssv=request.data.get('mssv'))
+            if HoatDongViewSet.hd_dict.get(self.get_object().id) is None or sv not in HoatDongViewSet.hd_dict.get(self.get_object().id):
+                HoatDongViewSet.hd_dict[self.get_object().id].append(UserSVSerializer(sv).data)
+        except UserSV.DoesNotExist:
+            return Response(HoatDongViewSet.hd_dict, status=status.HTTP_400_BAD_REQUEST)
+        # file_name = f"{self.get_object().id}_{strftime('%Y-%m-%d-%H-%M')}"
+        # s = f"{settings.MEDIA_ROOT}/diem_danh/{file_name}.csv"
+        #
+        # with open(s, 'a+', newline='', encoding='utf8') as csv_file:
+        #     write = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
+        #     line = [request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'),
+        #             request.data.get('email')]
+        #     # write.writerow(headers)
+        #     write.writerow(line)
+        #
+        # # writer = csv.writer(response)
+        # # writer.writerow(headers)
+        #
+        # # users = UserSV.objects.values(request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'), request.data.get('email'))
+        return Response(HoatDongViewSet.hd_dict, status=status.HTTP_200_OK)
+
+    @action(methods=['POST'], url_path="diemdanhtongket", detail=True)
+    def diem_danh_tong_ket(self, request, pk):
+        # headers = ['MSSV', 'First Name', 'Last Name', 'Email']
+        hd = self.get_object()
+        if HoatDongViewSet.hd_dict.get(hd.id) is not None:
+            for sv in HoatDongViewSet.hd_dict[hd.id]:
+                user_sv = UserSV.objects.get(pk=int(sv.get('id')))
+                hd.user_svs.add(user_sv)
+                HoatDongViewSet.hd_dict[hd.id].remove(sv)
+            hd.save()
+        # file_name = f"{self.get_object().id}_{strftime('%Y-%m-%d-%H-%M')}"
+        # s = f"{settings.MEDIA_ROOT}/diem_danh/{file_name}.csv"
+        #
+        # with open(s, 'a+', newline='', encoding='utf8') as csv_file:
+        #     write = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
+        #     line = [request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'),
+        #             request.data.get('email')]
+        #     # write.writerow(headers)
+        #     write.writerow(line)
+        #
+        # # writer = csv.writer(response)
+        # # writer.writerow(headers)
+        #
+        # # users = UserSV.objects.values(request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'), request.data.get('email'))
+
+        return Response(HoatDongSerializer(hd, context={
+            'request': request
+        }).data, status=status.HTTP_200_OK)
+
+    @action(methods=['POST'], url_path="diemdanhcsv", detail=True)
+    def diem_danh_csv(self, request, pk):
+        headers = ['MSSV', 'First Name', 'Last Name', 'Email']
         file_name = f"{self.get_object().id}_{strftime('%Y-%m-%d-%H-%M')}"
         s = f"{settings.MEDIA_ROOT}/diem_danh/{file_name}.csv"
 
         with open(s, 'a+', newline='', encoding='utf8') as csv_file:
             write = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
-            line = [request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'),
-                    request.data.get('email')]
+            line=[]
+            for sv in HoatDongViewSet.hd_dict[self.get_object().id]:
+                line = [sv.get('mssv'), sv.get('first_name'), sv.get('last_name'),
+                        sv.get('email')]
+                write.writerow(line)
             # write.writerow(headers)
-            write.writerow(line)
+
 
         # writer = csv.writer(response)
         # writer.writerow(headers)
 
-        # users = UserSV.objects.values(request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'), request.data.get('email'))
-
-        return HttpResponse(status=200)
+        # # users = UserSV.objects.values(request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'), request.data.get('email'))
+        return Response(HoatDongViewSet.hd_dict, status=status.HTTP_200_OK)
 
     @action(methods=['POST'], url_path="addcomment", detail=True)
     def add_comment(self, request, pk):
@@ -247,31 +307,6 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
             like.user = request.user
             like.save()
         return Response(LikeSerializer(like).data, status=status.HTTP_201_CREATED)
-
-    # @action(methods=['POST'], url_path="dislike", detail=True)
-    # def dislike(self, request, pk):
-    #     like = Like.objects.get(user_id=User.objects.get(username=request.user.username).id, hoat_dong_id=self.get_object().id)
-    #     like.is_like = !like.is_like
-    #     like.save()
-    #     return Response(LikeSerializer(like).data, status=status.HTTP_200_OK)
-
-
-    # @action(methods=['POST'], url_path="diemdanh", detail=True)
-    # def diem_danh(self, request, pk):
-    #     headers = ['MSSV', 'First Name', 'Last Name', 'Email']
-    #     file_name = f"{self.get_object().id}_{strftime('%Y-%m-%d-%H-%M')}"
-    #
-    #     response = HttpResponse(content_type='text/csv')
-    #     response['Content-Disposition'] = f'attachment; filename="{file_name}.csv"'
-    #
-    #     writer = csv.writer(response)
-    #     writer.writerow(headers)
-    #
-    #     # users = UserSV.objects.values(request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'), request.data.get('email'))
-    #
-    #     line = [request.data.get('mssv'), request.data.get('first_name'), request.data.get('last_name'), request.data.get('email')]
-    #     writer.writerow(line)
-    #     return response
 
 
 class QuyCheViewSet(viewsets.ViewSet, generics.ListAPIView):

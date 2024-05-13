@@ -56,6 +56,34 @@ class HoatDongAdmin(admin.ModelAdmin):
     form = HoatDongForm
     inlines = [HoatDongTagInlineAdmin]
 
+    # def save_model(self, request, obj, form, change):
+    #     if obj.pk is None:
+    #         # print(f'list: {self.user_svs.all()}')
+    #         for sv in obj.user_svs.all():
+    #             try:
+    #                 tt = ThanhTichNgoaiKhoa.objects.get(sinh_vien_id=sv.id, hoc_ki_id=obj.hoc_ki.id)
+    #                 tt.diem = tt.diem + obj.diem_cong
+    #                 tt.save()
+    #             except ThanhTichNgoaiKhoa.DoesNotExist:
+    #                 tt = ThanhTichNgoaiKhoa()
+    #                 tt.diem = obj.diem_cong
+    #                 tt.save()
+    #     else:
+    #         for sv in obj.user_svs.all():
+    #             try:
+    #                 tt = ThanhTichNgoaiKhoa.objects.get(sinh_vien_id=sv.id, hoc_ki_id=obj.hoc_ki.id)
+    #                 tt.diem = tt.diem + obj.diem_cong
+    #                 tt.save()
+    #             except ThanhTichNgoaiKhoa.DoesNotExist:
+    #                 tt = ThanhTichNgoaiKhoa()
+    #                 tt.diem = obj.diem_cong
+    #                 tt.sinh_vien = sv
+    #                 tt.hoc_ki = obj.hoc_ki
+    #                 tt.thanh_tich = "Kém"
+    #                 tt.save()
+    #
+    #     return super(HoatDongAdmin, self).save_model(request, obj, form, change)
+
 
 class LopAdmin(admin.ModelAdmin):
     list_display = [l.name for l in Lop._meta.fields]

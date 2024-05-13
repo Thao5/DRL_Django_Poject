@@ -5,6 +5,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
 from ckeditor.fields import RichTextField
 from cloudinary.models import CloudinaryField
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.timezone import now
 
@@ -78,8 +80,80 @@ class HoatDong(BaseModel):
     def __str__(self):
         return self.name
 
+    # def save(self, *args, **kwargs):
+    #     super(HoatDong, self).save(*args, **kwargs)
+    #     if self.pk is None:
+    #         # print(f'list: {self.user_svs.all()}')
+    #         for sv in self.user_svs.all():
+    #             try:
+    #                 tt = ThanhTichNgoaiKhoa.objects.get(sinh_vien_id=sv.id, hoc_ki_id=self.hoc_ki.id)
+    #                 tt.diem = tt.diem + self.diem_cong
+    #                 tt.save()
+    #             except ThanhTichNgoaiKhoa.DoesNotExist:
+    #                 tt = ThanhTichNgoaiKhoa()
+    #                 tt.diem = self.diem_cong
+    #                 tt.save()
+    #     else:
+    #         for sv in self.user_svs.all():
+    #             print(sv)
+    #             try:
+    #                 tt = ThanhTichNgoaiKhoa.objects.get(sinh_vien_id=sv.id, hoc_ki_id=self.hoc_ki.id)
+    #                 tt.diem = tt.diem + self.diem_cong
+    #                 tt.save()
+    #             except ThanhTichNgoaiKhoa.DoesNotExist:
+    #                 tt = ThanhTichNgoaiKhoa()
+    #                 tt.diem = self.diem_cong
+    #                 tt.sinh_vien = sv
+    #                 tt.hoc_ki = self.hoc_ki
+    #                 tt.thanh_tich = "Kém"
+    #                 tt.save()
+
     class Meta:
         verbose_name = "Hoạt động"
+
+
+@receiver(m2m_changed, sender=HoatDong.user_svs.through)
+def sinh_vien_changed(sender, action, pk_set, instance, **kwargs):
+    if action == 'post_add':
+        for pk in pk_set:
+            sv = instance.user_svs.get(id=pk)
+            try:
+                hds = sv.hoatdong_set.all()
+                tmp = list(filter(lambda x: (x.quy_che.id == instance.quy_che.id and x.hoc_ki.id == instance.hoc_ki.id), hds))
+                hds_sum = 0
+                count = 0
+                for hd in tmp:
+                    if count + 1 == len(tmp) and hds_sum < instance.quy_che.diem_toi_da < (hds_sum + hd.diem_cong):
+                        break
+                    hds_sum += hd.diem_cong
+                    count = count + 1
+
+                if hds_sum <= instance.quy_che.diem_toi_da:
+                    tt = ThanhTichNgoaiKhoa.objects.get(sinh_vien_id=sv.id, hoc_ki_id=instance.hoc_ki.id)
+                    if count + 1 == len(tmp):
+                        tt.diem = tt.diem + (instance.quy_che.diem_toi_da - hds_sum)
+                    else:
+                        tt.diem = tt.diem + instance.diem_cong
+                    if tt.diem > 100:
+                        tt.diem = 100
+                        tt.thanh_tich = "Xuất sắc"
+                    if 80 <= tt.diem < 100:
+                        tt.thanh_tich = "Giỏi"
+                    elif 50 <= tt.diem < 80:
+                        tt.thanh_tich = "Khá"
+                    elif 20 <= tt.diem < 50:
+                        tt.thanh_tich = "Yếu"
+                    elif tt.diem < 20:
+                        tt.thanh_tich = "Kém"
+                    tt.save()
+            except ThanhTichNgoaiKhoa.DoesNotExist:
+                tt = ThanhTichNgoaiKhoa()
+                tt.diem = instance.diem_cong
+                tt.thanh_tich = "Kém"
+                tt.sinh_vien = sv
+                tt.hoc_ki = instance.hoc_ki
+                tt.save()
+
 
 
 class Khoa(BaseModel):
@@ -152,7 +226,7 @@ class ThanhTichNgoaiKhoa(BaseModel):
     diem = models.FloatField(default=0)
     thanh_tich = models.CharField(max_length=15)
     # quy_ches = models.ManyToManyField('QuyChe')
-    sinh_vien = models.OneToOneField(UserSV, on_delete=models.SET_NULL, null=True)
+    sinh_vien = models.ForeignKey(UserSV, on_delete=models.SET_NULL, null=True)
     hoc_ki = models.ForeignKey('HocKi', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):

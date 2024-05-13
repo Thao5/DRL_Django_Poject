@@ -32,12 +32,6 @@ class HocKiSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class ThanhTichNgoaiKhoaSerializer(ModelSerializer):
-    class Meta:
-        model = ThanhTichNgoaiKhoa
-        fields = ['id', 'diem', 'thanh_tich']
-
-
 class LikeSerializer(ModelSerializer):
     class Meta:
         model = Like
@@ -164,6 +158,10 @@ class HoatDongSerializer(ModelSerializer):
         child=serializers.IntegerField(),
         write_only=True
     )
+    hoc_ki = HocKiSerializer(read_only=True)
+    hoc_ki_id = serializers.IntegerField(
+        write_only=True
+    )
     # tags = serializers.PrimaryKeyRelatedField(
     #     many=True,
     #     queryset=Tag.objects.all(),
@@ -181,7 +179,7 @@ class HoatDongSerializer(ModelSerializer):
     class Meta:
         model = HoatDong
         fields = ['id', 'name', 'mo_ta', 'ngay_du_kien', 'ngay_dien_ra', 'ngay_het', 'diem_cong', 'quy_che', 'tags',
-                  'user_svs', 'tag_ids', 'user_sv_ids']
+                  'user_svs', 'tag_ids', 'user_sv_ids', 'hoc_ki', 'hoc_ki_id']
 
     def create(self, validated_data):
         data = validated_data.copy()
@@ -263,6 +261,21 @@ class HoatDongSerializerDetail(HoatDongSerializer):
     class Meta:
         model = HoatDongSerializer.Meta.model
         fields = HoatDongSerializer.Meta.fields + ['like_set'] + ['comment_set'] + ['like_ids'] + ['comment_ids']
+
+
+class ThanhTichNgoaiKhoaSerializer(ModelSerializer):
+    sinh_vien = UserSVSerializer(read_only=True)
+    sinh_vien_id = serializers.IntegerField(
+        write_only=True
+    )
+    hoc_ki = HocKiSerializer(read_only=True)
+    hoc_ki_id = serializers.IntegerField(
+        write_only=True
+    )
+
+    class Meta:
+        model = ThanhTichNgoaiKhoa
+        fields = '__all__'
 
 
 
