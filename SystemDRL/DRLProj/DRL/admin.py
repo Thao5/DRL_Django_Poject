@@ -87,7 +87,8 @@ class DRLAppAdminSite(admin.AdminSite):
             diem_danhs = [DRLAppAdminSite.hd_dict[int(request.GET.get('search_hd_id'))]]
 
         if request.GET.get('tongket') is not None and request.GET.get('tongket').strip() != '' and request.GET.get('tongket') == '1':
-            if DRLAppAdminSite.hd_dict.get(request.GET.get('search_hd_id')) is not None:
+            print()
+            if DRLAppAdminSite.hd_dict.get(int(request.GET.get('search_hd_id'))) is not None:
                 hd = HoatDong.objects.get(pk=int(request.GET.get('search_hd_id')))
                 for sv in DRLAppAdminSite.hd_dict[int(request.GET.get('search_hd_id'))]:
                     user_sv = UserSV.objects.get(pk=int(sv.get('id')))

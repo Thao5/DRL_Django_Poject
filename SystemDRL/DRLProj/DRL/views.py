@@ -269,7 +269,9 @@ class HoatDongViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPI
         # headers = ['MSSV', 'First Name', 'Last Name', 'Email']
         hd = self.get_object()
         if DRLAppAdminSite.hd_dict.get(hd.id) is not None:
+
             for sv in DRLAppAdminSite.hd_dict[hd.id]:
+                print(f'SV: {sv}')
                 user_sv = UserSV.objects.get(pk=int(sv.get('id')))
                 hd.user_svs.add(user_sv)
                 DRLAppAdminSite.hd_dict[hd.id].remove(sv)
@@ -393,7 +395,7 @@ class ThanhTichViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retrieve
     pagination_class = DRLPaginator
 
     def get_permissions(self):
-        if self.action in ['thong_ke', 'thong_ke_tlsv', 'StatsPDF', 'StatsCSV', 'StatsPDF_tlsv', 'StatsCSV_tlsv']:
+        if self.action in ['thong_ke', 'thong_ke_tlsv']:
             return [HasGroupPermission()]
         return [permissions.AllowAny()]
 
