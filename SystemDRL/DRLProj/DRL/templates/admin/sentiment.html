@@ -1,0 +1,110 @@
+<!--{%extends 'admin/base_site.html'%}-->
+<!--{% block content %}-->
+<!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"-->
+<!--      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">-->
+<!--<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"-->
+<!--        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"-->
+<!--        crossorigin="anonymous"></script>-->
+<!--<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"-->
+<!--        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"-->
+<!--        crossorigin="anonymous"></script>-->
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"-->
+<!--        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"-->
+<!--        crossorigin="anonymous"></script>-->
+<!--<h1>SENTIMENT</h1>-->
+
+<!--<section class="container">-->
+<!--    <div class="nav nav-pills" id="nav-tab" role="tablist">-->
+<!--        <a class="nav-link active" id="nav-pos-tab" data-bs-toggle="tab" href="#nav-pos" role="tab"-->
+<!--           aria-controls="nav-pos" aria-selected="true">{{'Positive' + '(' + sentiment.positive.rate + '%)'}}></a>-->
+<!--        <a class="nav-link" id="nav-neu-tab" data-bs-toggle="tab" href="#nav-neu" role="tab" aria-controls="nav-neu"-->
+<!--           aria-selected="false">{{'Neutral' + '(' + sentiment.neutral.rate + '%)'}}></a>-->
+<!--        <a class="nav-link" id="nav-neg-tab" data-bs-toggle="tab" href="#nav-neg" role="tab" aria-controls="nav-neg"-->
+<!--           aria-selected="false" th:text="${'Negative' + '(' + sentiment.negative.rate + '%)'}"></a>-->
+<!--    </div>-->
+<!--    <div class="tab-content" id="nav-tabContent">-->
+<!--        <div class="tab-pane fade show active" id="nav-pos" role="tabpanel" aria-labelledby="nav-pos-tab">-->
+<!--            <table class="table table-hover">-->
+<!--                <thead>-->
+<!--                <tr>-->
+<!--                    <th>ID</th>-->
+<!--                    <th>Nội dung</th>-->
+<!--                    <th>Đánh giá</th>-->
+<!--                    <th>Ngày tạo</th>-->
+<!--                    <th class="pc-toggle">Người đánh giá</th>-->
+<!--                    <th class="pc-toggle">Món ăn</th>-->
+<!--                </tr>-->
+<!--                </thead>-->
+<!--                <tbody>-->
+<!--                <tr th:each="pos : ${sentiment.positive.list_comment}">-->
+<!--                    <td th:text="${pos.id}"></td>-->
+<!--                    <td th:text="${pos.noi_dung}"></td>-->
+<!--                    <td th:text="${pos.danh_gia}"></td>-->
+<!--                    <td th:text="${pos.created_date}"></td>-->
+<!--                    <td th:text="${pos.id_nguoi_dung.firstName}"></td>-->
+<!--                    <td th:text="${pos.id_thuc_an.name}"></td>-->
+<!--                </tr>-->
+<!--                </tbody>-->
+<!--            </table>-->
+<!--        </div>-->
+<!--        <div class="tab-pane fade" id="nav-neu" role="tabpanel" aria-labelledby="nav-neu-tab">-->
+<!--            <table class="table table-hover">-->
+<!--                <thead>-->
+<!--                <tr>-->
+<!--                    <th>ID</th>-->
+<!--                    <th>Nội dung</th>-->
+<!--                    <th>Đánh giá</th>-->
+<!--                    <th>Ngày tạo</th>-->
+<!--                    <th class="pc-toggle">Người đánh giá</th>-->
+<!--                    <th class="pc-toggle">Món ăn</th>-->
+<!--                </tr>-->
+<!--                </thead>-->
+<!--                <tbody>-->
+<!--                <tr th:each="pos : ${sentiment.neutral.list_comment}">-->
+<!--                    <td th:text="${pos.id}"></td>-->
+<!--                    <td th:text="${pos.noi_dung}"></td>-->
+<!--                    <td th:text="${pos.danh_gia}"></td>-->
+<!--                    <td th:text="${pos.created_date}"></td>-->
+<!--                    <td th:text="${pos.id_nguoi_dung.firstName}"></td>-->
+<!--                    <td th:text="${pos.id_thuc_an.name}"></td>-->
+<!--                </tr>-->
+<!--                </tbody>-->
+<!--            </table>-->
+<!--        </div>-->
+<!--        <div class="tab-pane fade" id="nav-neg" role="tabpanel" aria-labelledby="nav-neg-tab">-->
+<!--            <table class="table table-hover">-->
+<!--                <thead>-->
+<!--                <tr>-->
+<!--                    <th>ID</th>-->
+<!--                    <th>Nội dung</th>-->
+<!--                    <th>Đánh giá</th>-->
+<!--                    <th>Ngày tạo</th>-->
+<!--                    <th>Người đánh giá</th>-->
+<!--                    <th>Món ăn</th>-->
+<!--                </tr>-->
+<!--                </thead>-->
+<!--                <tbody>-->
+<!--                <tr th:each="pos : ${sentiment.negative.list_comment}">-->
+<!--                    <td th:text="${pos.id}"></td>-->
+<!--                    <td th:text="${pos.noi_dung}"></td>-->
+<!--                    <td th:text="${pos.danh_gia}"></td>-->
+<!--                    <td th:text="${pos.created_date}"></td>-->
+<!--                    <td th:text="${pos.id_nguoi_dung.firstName}"></td>-->
+<!--                    <td th:text="${pos.id_thuc_an.name}"></td>-->
+<!--                </tr>-->
+<!--                </tbody>-->
+<!--            </table>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</section>-->
+
+<!--<Style>-->
+<!--    .bg-light{-->
+<!--        background-color: transparent !important-->
+<!--    }-->
+<!--    li.nav-item{-->
+<!--        list-style-type: none-->
+<!--    }-->
+
+<!--</Style>-->
+<!--{%endblock%}-->

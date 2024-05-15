@@ -8,6 +8,12 @@ from rest_framework import serializers
 from DRLProj import settings
 
 
+class GroupSerializer(ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ['id', 'name']
+
+
 class LopSerializer(ModelSerializer):
     class Meta:
         model = Lop
@@ -44,45 +50,6 @@ class TagSerializer(ModelSerializer):
         fields = ['id', 'name']
 
 
-class MinhChungSerializer(ModelSerializer):
-    minh_chung = serializers.SerializerMethodField(source='minh_chung')
-
-    def get_minh_chung(self, obj):
-        request = self.context.get('request')
-        if obj.minh_chung:
-            if request:
-                return request.build_absolute_uri("/static/minh_chung/%s" % obj.minh_chung.name)
-            return "/%s" % obj.minh_chung.name
-
-    def create(self, validated_data):
-        user = None
-        request = self.context.get("request")
-        if request and hasattr(request, "user"):
-            user = request.user
-        data = validated_data.copy()
-        mc = SinhVienMinhChungHoatDong(**data)
-        u = UserSerializer(user).data
-        sv = UserSV.objects.get(username=u.get('username'))
-        mc.minh_chung = request.FILES.get('minh_chung')
-        mc.sinh_vien_id = sv.id
-        mc.trang_thai = "Đang xử lý"
-        mc.save()
-
-        return mc
-
-    class Meta:
-        model = SinhVienMinhChungHoatDong
-        fields = ['minh_chung', 'trang_thai', 'hoat_dong', 'sinh_vien', 'nguoi_kiem_tra_minh_chung']
-        extra_kwargs = {
-            'trang_thai': {
-                'read_only': True
-            },
-            'sinh_vien': {
-                'read_only': True
-            }
-        }
-
-
 class BaseSerializer(ModelSerializer):
     image = serializers.SerializerMethodField(source='image')
     tags = TagSerializer(many=True)
@@ -97,6 +64,7 @@ class BaseSerializer(ModelSerializer):
 
 class UserSVSerializer(ModelSerializer):
     avatar_path = serializers.SerializerMethodField(source='avatar')
+    groups = GroupSerializer(many=True, read_only=True)
     # hoat_dongs = HoatDongSerializer(many=True)
     khoa = KhoaSerializer(read_only=True)
     khoa_id = serializers.IntegerField(
@@ -110,7 +78,7 @@ class UserSVSerializer(ModelSerializer):
     class Meta:
         model = UserSV
         ref_name = "User SV"
-        exclude = ('is_superuser', 'is_staff', 'last_login', 'is_active', 'user_permissions', 'groups', 'date_joined',)
+        exclude = ('is_superuser', 'is_staff', 'last_login', 'is_active', 'user_permissions', 'date_joined',)
         extra_kwargs = {
             'password': {
                 'write_only': True
@@ -120,11 +88,14 @@ class UserSVSerializer(ModelSerializer):
             },
             'username':{
                 'read_only': True
+            },
+            'avatar': {
+                "required": True
             }
         }
 
     def create(self, validated_data):
-        nhom = Group.objects.get(name='SV')
+        # nhom = Group.objects.get(name='SV')
         data = validated_data.copy()
         # hds_data = data.pop('hoat_dongs', [])
         # ids = [hd.get('id') for hd in hds_data if hd]
@@ -132,9 +103,9 @@ class UserSVSerializer(ModelSerializer):
         user = UserSV(**data)
         user.username = user.email
         # user.hoat_dongs.add(*h)
-        user.save()
-        user.groups.add(nhom)
-        user.save()
+        # user.save()
+        # user.groups.add(nhom)
+        # user.save()
 
         return user
 
@@ -151,12 +122,14 @@ class HoatDongSerializer(ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     tag_ids = serializers.ListField(
         child=serializers.IntegerField(),
-        write_only=True
+        write_only=True,
+        required=False
     )
     user_svs = UserSVSerializer(many=True, required=False, read_only=True)
     user_sv_ids = serializers.ListField(
         child=serializers.IntegerField(),
-        write_only=True
+        write_only=True,
+        required=False
     )
     hoc_ki = HocKiSerializer(read_only=True)
     hoc_ki_id = serializers.IntegerField(
@@ -183,21 +156,29 @@ class HoatDongSerializer(ModelSerializer):
 
     def create(self, validated_data):
         data = validated_data.copy()
-        tag_ids = validated_data.pop('tag_ids')
-        user_sv_ids = validated_data.pop('user_sv_ids')
+        tag_ids = validated_data.get('tag_ids', None)
+        user_sv_ids = validated_data.get('user_sv_ids', None)
+        if tag_ids is not None:
+            tag_ids = validated_data.pop('tag_ids')
+        if user_sv_ids is not None:
+            user_sv_ids = validated_data.pop('user_sv_ids')
         hoat_dong = HoatDong.objects.create(**validated_data)
-        hoat_dong.tags.set(tag_ids)
-        hoat_dong.user_svs.set(user_sv_ids)
+        if tag_ids is not None:
+            hoat_dong.tags.set(tag_ids)
+        if user_sv_ids is not None:
+            hoat_dong.user_svs.set(user_sv_ids)
+        hoat_dong.save()
 
         return hoat_dong
 
 
 class UserSerializer(ModelSerializer):
     # avatar = serializers.SerializerMethodField(source='avatar')
+    groups = GroupSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'username', 'password', 'email', 'phone', 'avatar']
+        fields = ['first_name', 'last_name', 'username', 'password', 'email', 'phone', 'avatar', 'groups']
         extra_kwargs = {
             'password': {
                 'write_only': True
@@ -236,12 +217,14 @@ class HoatDongSerializerDetail(HoatDongSerializer):
     like_set = LikeSerializer(many=True, read_only=True)
     like_ids = serializers.ListField(
         child=serializers.IntegerField(),
-        write_only=True
+        write_only=True,
+        required=False
     )
     comment_set = CommentSerializer(many=True, read_only=True)
     comment_ids = serializers.ListField(
         child=serializers.IntegerField(),
-        write_only=True
+        write_only=True,
+        required=False
     )
 
     # def __init__(self, *args, **kwargs):
@@ -278,4 +261,62 @@ class ThanhTichNgoaiKhoaSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class MinhChungSerializer(ModelSerializer):
+    minh_chung = serializers.SerializerMethodField(source='minh_chung')
+    nguoi_kiem_tra_minh_chung = UserSerializer(read_only=True)
+    hoat_dong = HoatDongSerializer(read_only=True)
+    hoat_dong_id = serializers.IntegerField(
+        write_only=True
+    )
+    sinh_vien = UserSVSerializer(read_only=True)
+
+    def get_minh_chung(self, obj):
+        request = self.context.get('request')
+        if obj.minh_chung:
+            if request:
+                return request.build_absolute_uri("/static/%s" % obj.minh_chung.name)
+            return "/%s" % obj.minh_chung.name
+
+    def create(self, validated_data):
+        user = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+        data = validated_data.copy()
+        mc = SinhVienMinhChungHoatDong(**data)
+        u = UserSerializer(user).data
+        sv = UserSV.objects.get(username=u.get('username'))
+        mc.minh_chung = request.FILES.get('minh_chung')
+        mc.sinh_vien_id = sv.id
+        mc.trang_thai = "Đang xử lý"
+        mc.save()
+
+        return mc
+
+    def update(self, instance, validated_data):
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+        data = validated_data.copy()
+        u = User.objects.get(username=user.username)
+        instance.nguoi_kiem_tra_minh_chung = u
+        if instance.trang_thai == "Đã xử lý":
+            instance.hoat_dong.user_svs.add(instance.sinh_vien)
+        instance.save()
+        return super().update(instance, validated_data)
+
+    class Meta:
+        model = SinhVienMinhChungHoatDong
+        fields = ['id', 'minh_chung', 'trang_thai', 'hoat_dong', 'sinh_vien', 'nguoi_kiem_tra_minh_chung', 'hoat_dong_id']
+        extra_kwargs = {
+            'trang_thai': {
+                'required': False
+            },
+            'sinh_vien': {
+                'read_only': True
+            },
+            'nguoi_kiem_tra_minh_chung': {
+                'read_only': True
+            }
+        }
 

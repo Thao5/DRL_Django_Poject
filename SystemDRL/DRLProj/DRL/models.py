@@ -1,6 +1,7 @@
 import datetime
 
 import cloudinary
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
 from ckeditor.fields import RichTextField
@@ -11,6 +12,8 @@ from django.utils import timezone
 from django.utils.timezone import now
 
 from DRLProj.settings import MEDIA_ROOT
+
+from django.utils.translation import gettext_lazy as _
 
 
 # Create your models here.
@@ -30,6 +33,12 @@ class User(AbstractUser):
                 self.set_password(self.password)
         super().save(*args, **kwargs)
 
+    def has_perm(self, perm, obj=None):
+        try:
+            return (Group.objects.get(name="TLSV").user_set.filter(id=self.id).exists() or Group.objects.get(name="CTSV").user_set.filter(id=self.id).exists() or self.is_staff or self.is_superuser) and self.is_active
+        except Group.DoesNotExist:
+            return False
+
     class Meta:
         verbose_name = "Người dùng"
 
@@ -45,6 +54,11 @@ class UserSV(User):
 
     class Meta:
         verbose_name = "Sinh viên"
+
+    def clean(self):
+        tmp = self.email[self.email.index("@"):]
+        if tmp != "@ou.edu.vn":
+            raise ValidationError(_('Email phải là đuôi @ou.edu.vn'))
 
     def save(self, *args, **kwargs):
         tmp = 0
@@ -153,7 +167,6 @@ def sinh_vien_changed(sender, action, pk_set, instance, **kwargs):
                 tt.sinh_vien = sv
                 tt.hoc_ki = instance.hoc_ki
                 tt.save()
-
 
 
 class Khoa(BaseModel):

@@ -44,6 +44,18 @@
         </select>
     </div>
 
+    <div class="form-group">
+        <label for="thanhtich">Thành tích</label>
+        <select class="form-control" id="thanhtich" name="thanhtich">
+            <option selected value="">Tất cả</option>
+            <option value="Xuất sắc">Xuất sắc</option>
+            <option value="Giỏi">Giỏi</option>
+            <option value="Trung bình">Trung bình</option>
+            <option value="Yếu">Yếu</option>
+            <option value="Kém">Kém</option>
+        </select>
+    </div>
+
 
     <input type="submit" value="Thống kê" />
 </form>
@@ -61,6 +73,7 @@
         let myParam = urlParams.get('khoa');
         let myParam2 = urlParams.get('lop');
         let myParam3 = urlParams.get('hk');
+        let myParam4 = urlParams.get('thanhtich');
         if(myParam == null){
             myParam = '';
         }
@@ -70,7 +83,10 @@
         if(myParam3 == null){
             myParam3 = '';
         }
-        document.getElementById("downlStats").href = "/thanhtichs/statspdf/" + "?" + "khoa=" + myParam + "&" + "lop=" + myParam2 + "&" + "hk=" + myParam3;
+        if(myParam4 == null){
+            myParam4 = '';
+        }
+        document.getElementById("downlStats").href = "/thanhtichs/statspdf/" + "?" + "khoa=" + myParam + "&" + "lop=" + myParam2 + "&" + "hk=" + myParam3 + "&" + "thanhtich=" + myParam4;
     }
 
     document.getElementById("downlStatsCSV").onclick = function() {
@@ -78,6 +94,7 @@
         let myParam = urlParams.get('khoa');
         let myParam2 = urlParams.get('lop');
         let myParam3 = urlParams.get('hk');
+        let myParam4 = urlParams.get('thanhtich');
         if(myParam == null){
             myParam = '';
         }
@@ -87,7 +104,10 @@
         if(myParam3 == null){
             myParam3 = '';
         }
-        document.getElementById("downlStatsCSV").href = "/thanhtichs/statscsv/" + "?" + "khoa=" + myParam + "&" + "lop=" + myParam2 + "&" + "hk=" + myParam3;
+        if(myParam4 == null){
+            myParam4 = '';
+        }
+        document.getElementById("downlStatsCSV").href = "/thanhtichs/statscsv/" + "?" + "khoa=" + myParam + "&" + "lop=" + myParam2 + "&" + "hk=" + myParam3 + "&" + "thanhtich=" + myParam4;
     }
 </script>
 
